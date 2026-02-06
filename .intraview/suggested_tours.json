@@ -1,0 +1,119 @@
+{
+  "$schema": "https://intraview.ai/schemas/suggestions-v1.0.json",
+  "version": "1.0",
+  "description": "Agent-managed suggestions for tours and documentation",
+  "suggestions": [
+    {
+      "id": "getting-started-tour",
+      "type": "tour",
+      "status": "pending",
+      "title": "Getting Started Tour",
+      "description": "Understand how this codebase is organized and where to begin",
+      "prompt": "Create an Intraview tour to help a new developer get started with this codebase.\n\nAnalyze the repository structure and create a walkthrough that covers:\n- The main entry point(s) and how the application/library starts\n- Project structure and key directories\n- Core patterns and conventions used\n- How to run, build, and test the project\n- Important configuration files\n\nAdapt the tour based on what you discover - this could be a web app, library, CLI tool, or service.",
+      "priority": 1,
+      "category": "onboarding",
+      "tags": [
+        "beginner",
+        "overview",
+        "structure"
+      ],
+      "created_by": "system",
+      "metadata": {
+        "estimatedDuration": "10-15 minutes",
+        "targetAudience": "new developers"
+      },
+      "created_at": "2026-02-06T17:07:37.469Z"
+    },
+    {
+      "id": "architecture-overview",
+      "type": "tour",
+      "status": "pending",
+      "title": "Architecture Overview",
+      "description": "Learn the high-level design and how components interact",
+      "prompt": "Create an Intraview tour explaining this codebase's architecture.\n\nExplore and document:\n- High-level system design and main components\n- How data flows through the system\n- Key abstractions and patterns (MVC, event-driven, layered, etc.)\n- Integration points (APIs, databases, external services) if present\n- Design decisions that are evident from the code structure\n\nFocus on helping developers understand the \"big picture\" before diving into details.",
+      "priority": 2,
+      "category": "architecture",
+      "tags": [
+        "design",
+        "patterns",
+        "components"
+      ],
+      "created_by": "system",
+      "metadata": {
+        "estimatedDuration": "12-18 minutes",
+        "targetAudience": "developers needing context"
+      },
+      "created_at": "2026-02-06T17:07:37.469Z"
+    },
+    {
+      "id": "development-workflow",
+      "type": "tour",
+      "status": "pending",
+      "title": "Development Workflow",
+      "description": "Learn the toolchain, scripts, and development process",
+      "prompt": "Create an Intraview tour covering the development workflow for this project.\n\nWalk through:\n- How to set up the development environment\n- Build tools and scripts (package.json scripts, Makefile, etc.)\n- Testing approach and how to run tests\n- Linting, formatting, and code quality tools\n- Development vs production configurations\n- Common development tasks and commands\n\nHelp developers become productive quickly with the day-to-day workflow.",
+      "priority": 2,
+      "category": "tooling",
+      "tags": [
+        "development",
+        "build",
+        "testing",
+        "workflow"
+      ],
+      "created_by": "system",
+      "metadata": {
+        "estimatedDuration": "8-12 minutes",
+        "targetAudience": "all developers"
+      },
+      "created_at": "2026-02-06T17:07:37.469Z"
+    },
+    {
+      "id": "core-functionality",
+      "type": "tour",
+      "status": "pending",
+      "title": "Core Functionality Deep Dive",
+      "description": "Understand the main feature or purpose of this codebase",
+      "prompt": "Create an Intraview tour exploring the core functionality of this codebase.\n\nIdentify and explain:\n- What is the primary purpose of this project?\n- Where is the main business logic or core algorithm?\n- How does the key feature work end-to-end?\n- Important functions, classes, or modules that drive the main functionality\n- How would someone extend or modify the core behavior?\n\nFocus on the \"heart\" of the codebase - what makes it do what it does.",
+      "priority": 2,
+      "category": "feature",
+      "tags": [
+        "core",
+        "functionality",
+        "business-logic"
+      ],
+      "created_by": "system",
+      "metadata": {
+        "estimatedDuration": "15-20 minutes",
+        "targetAudience": "developers working on features"
+      },
+      "created_at": "2026-02-06T17:07:37.469Z"
+    },
+    {
+      "id": "dependencies-and-integrations",
+      "type": "tour",
+      "status": "pending",
+      "title": "Dependencies & Integrations",
+      "description": "Learn about external services, APIs, and key dependencies",
+      "prompt": "Create an Intraview tour covering dependencies and integrations in this codebase.\n\nExplore:\n- Key external dependencies and why they're used\n- Integration points (REST APIs, GraphQL, databases, message queues, etc.)\n- Authentication/authorization if present\n- Configuration for external services\n- How errors and failures from external systems are handled\n\nHelp developers understand what this system connects to and depends on.",
+      "priority": 3,
+      "category": "architecture",
+      "tags": [
+        "dependencies",
+        "integrations",
+        "external-services"
+      ],
+      "created_by": "system",
+      "metadata": {
+        "estimatedDuration": "10-15 minutes",
+        "targetAudience": "developers debugging integrations"
+      },
+      "created_at": "2026-02-06T17:07:37.469Z"
+    }
+  ],
+  "metadata": {
+    "lastUpdated": "2026-02-06T17:07:37.469Z",
+    "totalSuggestions": 5,
+    "pendingSuggestions": 5,
+    "completedSuggestions": 0
+  }
+}
