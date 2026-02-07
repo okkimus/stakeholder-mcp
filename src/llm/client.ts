@@ -61,12 +61,17 @@ export class LLMClient {
     const model = params.model ?? this.defaultModel;
 
     try {
+      const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+        { role: "system", content: params.systemPrompt },
+        ...(params.conversationHistory ?? []).map((t) => ({
+          role: t.role as "user" | "assistant",
+          content: t.content,
+        })),
+        { role: "user", content: params.userPrompt },
+      ];
       const completion = await this.client.chat.completions.create({
         model,
-        messages: [
-          { role: "system", content: params.systemPrompt },
-          { role: "user", content: params.userPrompt },
-        ],
+        messages,
         temperature: params.temperature ?? DEFAULT_TEMPERATURE,
         max_tokens: params.maxTokens ?? this.defaultMaxTokens,
       });

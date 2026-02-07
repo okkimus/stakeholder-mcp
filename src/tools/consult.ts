@@ -1,25 +1,54 @@
 import { PersonaManager } from "../personas/manager";
 import { LLMClient, buildContextString } from "../llm/client";
-import type { ConsultationResponse, ConsultationContext } from "../llm/types";
+import type {
+  ConsultationResponse,
+  ConsultationContext,
+  ConversationTurn,
+} from "../llm/types";
 import type { Stakeholder } from "../personas/types";
 import type { ConsultationDatabase, ConsultationLog } from "../db/database";
 
-/** Max length of each past response included in conversation history (to avoid token explosion) */
-const CONVERSATION_HISTORY_RESPONSE_MAX_LENGTH = 2000;
+/** Max number of prior user/assistant exchanges to include (oldest dropped) */
+const CONVERSATION_HISTORY_MAX_TURNS = 15;
+
+/** Rough tokens per character for truncation; ~4 is typical for English. */
+const CHARS_PER_TOKEN_ESTIMATE = 4;
+
+/** Max estimated tokens per past assistant response to avoid context explosion; responses are truncated from the end. */
+const CONVERSATION_HISTORY_RESPONSE_MAX_TOKENS = 1024;
 
 /**
- * Build a "previous conversation" string from consultation logs (chronological order).
+ * Truncate text to approximately maxTokens (by character heuristic), keeping the start.
+ * Use so the model still sees the beginning of long past responses.
  */
-function buildConversationHistoryString(logs: ConsultationLog[]): string {
-  if (logs.length === 0) return "";
-  const lines = logs.map((log) => {
-    const response =
-      log.response.length > CONVERSATION_HISTORY_RESPONSE_MAX_LENGTH
-        ? log.response.slice(0, CONVERSATION_HISTORY_RESPONSE_MAX_LENGTH) + "..."
-        : log.response;
-    return `User: ${log.prompt}\n\n${log.stakeholder_name}: ${response}`;
-  });
-  return `\n\n## Previous conversation in this session\n\n${lines.join("\n\n---\n\n")}`;
+function truncateToApproxTokens(
+  text: string,
+  maxTokens: number
+): string {
+  const maxChars = maxTokens * CHARS_PER_TOKEN_ESTIMATE;
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars) + "\n[... truncated]";
+}
+
+/**
+ * Build prior conversation as separate user/assistant messages for the chat API.
+ * This gives the model proper turn boundaries and better context than one concatenated string.
+ */
+function buildConversationHistory(logs: ConsultationLog[]): ConversationTurn[] {
+  if (logs.length === 0) return [];
+  const turns: ConversationTurn[] = [];
+  const keep = logs.slice(-CONVERSATION_HISTORY_MAX_TURNS);
+  for (const log of keep) {
+    turns.push({ role: "user", content: log.prompt });
+    turns.push({
+      role: "assistant",
+      content: truncateToApproxTokens(
+        log.response,
+        CONVERSATION_HISTORY_RESPONSE_MAX_TOKENS
+      ),
+    });
+  }
+  return turns;
 }
 
 /**
@@ -49,30 +78,30 @@ export async function consultStakeholder(
   // Build the system prompt from the persona
   const systemPrompt = manager.buildSystemPrompt(stakeholder);
 
-  // Build the user prompt with context
-  let contextString = buildContextString(params.context);
+  // Build the user prompt with context (project, previousFeedback, artifacts — but not session history)
+  const contextString = buildContextString(params.context);
+  const userPrompt = params.prompt + contextString;
 
-  // Inject prior conversation in this session so the stakeholder "remembers" the discussion
+  // Prior conversation in this session as proper user/assistant turns (so the model sees message boundaries)
+  let conversationHistory: ConversationTurn[] | undefined;
   if (db && params.context?.sessionId) {
     const priorLogs = db.getConsultations({
       sessionId: params.context.sessionId,
       stakeholderId: params.id,
-      limit: 15,
+      limit: CONVERSATION_HISTORY_MAX_TURNS,
     });
     const chronological = [...priorLogs].reverse();
-    const historySection = buildConversationHistoryString(chronological);
-    if (historySection) contextString += historySection;
+    conversationHistory = buildConversationHistory(chronological);
   }
-
-  const userPrompt = params.prompt + contextString;
 
   // Determine model (params override > stakeholder default > client default)
   const model = params.model ?? stakeholder.model;
 
-  // Generate response
+  // Generate response (with optional prior turns so the stakeholder "remembers" the discussion)
   const response = await llmClient.generate({
     systemPrompt,
     userPrompt,
+    conversationHistory,
     model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,

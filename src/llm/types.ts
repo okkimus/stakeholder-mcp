@@ -1,11 +1,22 @@
 import { z } from "zod";
 
 /**
+ * One turn in a conversation (user or assistant).
+ * Used to send prior session history so the model sees proper message boundaries.
+ */
+export interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/**
  * Parameters for generating an LLM response
  */
 export interface GenerateParams {
   systemPrompt: string;
   userPrompt: string;
+  /** Prior user/assistant turns (e.g. from session history). Sent as separate messages for better context. */
+  conversationHistory?: ConversationTurn[];
   model?: string;
   temperature?: number;
   maxTokens?: number;
