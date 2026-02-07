@@ -2,6 +2,8 @@
 
 An MCP (Model Context Protocol) server that exposes stakeholder personas as tools for iterative product feedback. Each stakeholder represents a distinct role with a unique personality, expertise, and concerns.
 
+> **Disclaimer** — This project was fully AI-generated with Cursor. There is no warranty or liability; use it at your own responsibility.
+
 ## Features
 
 - **7 Pre-configured Stakeholders**: Tech Lead, Product Manager, UX Designer, Security Engineer, DevOps Engineer, and two End User personas
@@ -49,7 +51,32 @@ The server uses stdio transport, which is the standard for MCP clients like Clau
 
 ## Usage Examples
 
-### List Stakeholders
+### Example Prompts for AI Models
+
+When using the MCP with Claude, Cursor, or another AI assistant, you can prompt the model to use the stakeholder tools. The model will then call the MCP (e.g. `list_stakeholders`, `consult_stakeholder`, `consult_group`) on your behalf.
+
+**Planning a new feature**
+
+- *"I'm planning to add a dark mode toggle to our app. Consult the relevant stakeholders (UX, product, maybe tech) and summarize their feedback before we lock the design."*
+- *"We're considering moving our auth from email/password to OAuth-only. Get feedback from the security engineer, product manager, and one end-user persona, then give me a recommendation."*
+
+**Reviewing a design or spec**
+
+- *"I've drafted a spec for the new checkout flow (see below). Run it by the product manager, UX designer, and the senior end-user persona. Use sequential mode so each can see the previous feedback."*
+- *"Review this API design with the tech lead and DevOps engineer. Ask them about scalability and deployment concerns."*
+
+**Before implementing**
+
+- *"Before I implement this feature, list stakeholders whose expertise is relevant to [security / UX / infra], then consult them on [specific question]."*
+- *"I want to ship a beta of our mobile app. Consult the product manager and both end-user personas on what we should include in the first release."*
+
+**Custom stakeholders**
+
+- *"We need accessibility input. Create a stakeholder who's an accessibility consultant, then ask them to review our button and form design."*
+
+---
+
+### List Stakeholders (tool call)
 
 ```json
 {
@@ -62,7 +89,7 @@ The server uses stdio transport, which is the standard for MCP clients like Clau
 }
 ```
 
-### Consult a Stakeholder
+### Consult a Stakeholder (tool call)
 
 ```json
 {
@@ -77,7 +104,7 @@ The server uses stdio transport, which is the standard for MCP clients like Clau
 }
 ```
 
-### Consult Multiple Stakeholders
+### Consult Multiple Stakeholders (tool call)
 
 ```json
 {
@@ -96,7 +123,7 @@ The server uses stdio transport, which is the standard for MCP clients like Clau
 }
 ```
 
-### Create a Custom Stakeholder
+### Create a Custom Stakeholder (tool call)
 
 ```json
 {
@@ -161,9 +188,11 @@ stakeholders:
       - "priority 2"
 ```
 
-## Integration with Claude Desktop
+## Setting up with MCP-compatible tools
 
-Add to your Claude Desktop MCP config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+### Claude Desktop
+
+Add to your Claude Desktop MCP config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
@@ -178,6 +207,26 @@ Add to your Claude Desktop MCP config (`~/Library/Application Support/Claude/cla
   }
 }
 ```
+
+### Cursor
+
+Add the server to your MCP config. User-level: **Cursor Settings → MCP → Edit config** (or `~/.cursor/mcp.json`). Project-level: `.cursor/mcp.json` in the repo root.
+
+```json
+{
+  "mcpServers": {
+    "stakeholder-mcp": {
+      "command": "bun",
+      "args": ["run", "/path/to/stakeholder-mcp/src/index.ts"],
+      "env": {
+        "OPENROUTER_API_KEY": "your-key-here"
+      }
+    }
+  }
+}
+```
+
+Replace `/path/to/stakeholder-mcp` with the actual path to this project.
 
 ## Development
 
