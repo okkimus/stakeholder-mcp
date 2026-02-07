@@ -108,6 +108,9 @@ The [examples/full-example-language-app/](examples/full-example-language-app/) d
 }
 ```
 
+**Stakeholders remember the discussion (session memory)**  
+If your agent asks a question and then a follow-up, the stakeholder does not see the first message unless you pass a **session ID**. Set `context.sessionId` to a stable value for the conversation (e.g. a task id or thread id). The server will load prior consultations for that session from the database and inject them into the prompt, so the stakeholder sees the previous Q&A and can answer follow-ups in context. Use the same `sessionId` for the initial question and all follow-ups with that stakeholder.
+
 ### Consult Multiple Stakeholders (tool call)
 
 ```json

@@ -2,10 +2,30 @@ import { PersonaManager } from "../personas/manager";
 import { LLMClient, buildContextString } from "../llm/client";
 import type { ConsultationResponse, ConsultationContext } from "../llm/types";
 import type { Stakeholder } from "../personas/types";
-import type { ConsultationDatabase } from "../db/database";
+import type { ConsultationDatabase, ConsultationLog } from "../db/database";
+
+/** Max length of each past response included in conversation history (to avoid token explosion) */
+const CONVERSATION_HISTORY_RESPONSE_MAX_LENGTH = 2000;
 
 /**
- * Consult a single stakeholder
+ * Build a "previous conversation" string from consultation logs (chronological order).
+ */
+function buildConversationHistoryString(logs: ConsultationLog[]): string {
+  if (logs.length === 0) return "";
+  const lines = logs.map((log) => {
+    const response =
+      log.response.length > CONVERSATION_HISTORY_RESPONSE_MAX_LENGTH
+        ? log.response.slice(0, CONVERSATION_HISTORY_RESPONSE_MAX_LENGTH) + "..."
+        : log.response;
+    return `User: ${log.prompt}\n\n${log.stakeholder_name}: ${response}`;
+  });
+  return `\n\n## Previous conversation in this session\n\n${lines.join("\n\n---\n\n")}`;
+}
+
+/**
+ * Consult a single stakeholder.
+ * When context.sessionId is set and the consultation DB is available, prior consultations
+ * with this stakeholder in the same session are injected so the stakeholder can "remember" the discussion.
  */
 export async function consultStakeholder(
   manager: PersonaManager,
@@ -30,7 +50,20 @@ export async function consultStakeholder(
   const systemPrompt = manager.buildSystemPrompt(stakeholder);
 
   // Build the user prompt with context
-  const contextString = buildContextString(params.context);
+  let contextString = buildContextString(params.context);
+
+  // Inject prior conversation in this session so the stakeholder "remembers" the discussion
+  if (db && params.context?.sessionId) {
+    const priorLogs = db.getConsultations({
+      sessionId: params.context.sessionId,
+      stakeholderId: params.id,
+      limit: 15,
+    });
+    const chronological = [...priorLogs].reverse();
+    const historySection = buildConversationHistoryString(chronological);
+    if (historySection) contextString += historySection;
+  }
+
   const userPrompt = params.prompt + contextString;
 
   // Determine model (params override > stakeholder default > client default)

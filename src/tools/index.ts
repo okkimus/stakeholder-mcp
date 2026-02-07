@@ -89,12 +89,12 @@ export function registerTools(
   // consult_stakeholder - Query a single stakeholder for feedback
   server.tool(
     "consult_stakeholder",
-    "Consult a specific stakeholder for feedback on a proposal, design, or idea. The stakeholder will respond in character based on their role, expertise, and personality.",
+    "Consult a specific stakeholder for feedback on a proposal, design, or idea. The stakeholder will respond in character. Pass context.sessionId (e.g. a stable id for this conversation) so follow-up questions in the same session include prior Q&A and the stakeholder remembers the discussion.",
     {
       id: z.string().min(1).describe("Stakeholder ID to consult"),
       prompt: z.string().min(1).describe("The question or proposal to get feedback on"),
       context: z.object({
-        sessionId: z.string().optional(),
+        sessionId: z.string().optional().describe("Stable ID for this conversation; when set, prior consultations in this session are shown to the stakeholder so they remember the discussion"),
         projectDescription: z.string().optional(),
         previousFeedback: z.array(z.object({
           stakeholderId: z.string(),
@@ -150,12 +150,12 @@ export function registerTools(
   // consult_group - Query multiple stakeholders
   server.tool(
     "consult_group",
-    "Consult multiple stakeholders for feedback. Can run in parallel (all at once) or sequential (each sees previous responses) mode.",
+    "Consult multiple stakeholders for feedback. Can run in parallel (all at once) or sequential (each sees previous responses) mode. Pass context.sessionId so follow-ups in the same session let each stakeholder see prior Q&A.",
     {
       ids: z.array(z.string().min(1)).min(1).describe("Array of stakeholder IDs to consult"),
       prompt: z.string().min(1).describe("The question or proposal to get feedback on"),
       context: z.object({
-        sessionId: z.string().optional(),
+        sessionId: z.string().optional().describe("Stable ID for this conversation; prior consultations in this session are shown so stakeholders remember the discussion"),
         projectDescription: z.string().optional(),
         previousFeedback: z.array(z.object({
           stakeholderId: z.string(),
