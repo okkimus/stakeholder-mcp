@@ -6,7 +6,7 @@ import type { ConsultationResponse, ConsultationContext } from "../llm/types";
 
 // Resolve relative to the project root (where this file lives at src/db/database.ts)
 const PROJECT_ROOT = resolve(dirname(new URL(import.meta.url).pathname), "..", "..");
-const DB_PATH = process.env.DB_PATH ?? resolve(PROJECT_ROOT, "data", "consultations.db");
+export const DB_PATH = process.env.DB_PATH ?? resolve(PROJECT_ROOT, "data", "consultations.db");
 
 /**
  * A single consultation log row

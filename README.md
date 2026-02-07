@@ -168,8 +168,11 @@ The [examples/full-example-language-app/](examples/full-example-language-app/) d
 |----------|-------------|---------|
 | `OPENROUTER_API_KEY` | Your OpenRouter API key | (required for LLM calls) |
 | `DEFAULT_MODEL` | Default LLM model | `anthropic/claude-3-haiku` |
+| `DB_PATH` | SQLite path for consultation logs | `data/consultations.db` |
 | `STAKEHOLDER_MCP_API_KEY` | API key for HTTP auth | (optional) |
 | `LOG_LEVEL` | Logging level | `info` |
+
+Runtime stakeholders (created via `create_stakeholder` or overrides from `update_stakeholder`) are persisted to a JSON file so they survive server restarts. By default the file is `data/runtime-stakeholders.json` (same directory as `DB_PATH`). You can override the path when creating the server via `runtimeStakeholdersPath` in `ServerConfig`.
 
 ### Customizing Stakeholders
 

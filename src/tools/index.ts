@@ -213,7 +213,7 @@ export function registerTools(
   // create_stakeholder - Add a new runtime persona
   server.tool(
     "create_stakeholder",
-    "Create a new stakeholder persona at runtime. Runtime stakeholders are stored in memory and persist until the server restarts.",
+    "Create a new stakeholder persona at runtime. Runtime stakeholders are persisted to a JSON file (data/runtime-stakeholders.json by default) and survive server restarts.",
     {
       stakeholder: z.object({
         id: z.string().min(1).optional().describe("Optional ID, will be auto-generated if not provided"),
@@ -317,7 +317,7 @@ export function registerTools(
   // delete_stakeholder - Remove a runtime persona
   server.tool(
     "delete_stakeholder",
-    "Delete a runtime stakeholder persona. Config-based stakeholders cannot be deleted, but their runtime overrides can be removed.",
+    "Delete a runtime stakeholder persona. Config-based stakeholders cannot be deleted, but their runtime overrides can be removed. Persisted runtime stakeholders are removed from the store file.",
     {
       id: z.string().min(1).describe("Stakeholder ID to delete"),
     },

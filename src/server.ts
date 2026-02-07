@@ -1,8 +1,9 @@
+import { resolve, dirname } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { PersonaManager } from "./personas/manager";
 import { LLMClient } from "./llm/client";
-import { ConsultationDatabase } from "./db/database";
+import { ConsultationDatabase, DB_PATH } from "./db/database";
 import { registerTools } from "./tools";
 import { logger } from "./utils/logger";
 
@@ -11,6 +12,8 @@ export interface ServerConfig {
   version?: string;
   configPath?: string;
   dbPath?: string;
+  /** Path for persisting runtime stakeholders (default: same dir as db, file runtime-stakeholders.json) */
+  runtimeStakeholdersPath?: string;
 }
 
 /**
@@ -25,8 +28,11 @@ export function createServer(config: ServerConfig = {}): {
   const name = config.name ?? "stakeholder-mcp";
   const version = config.version ?? "1.0.0";
 
-  // Initialize persona manager
-  const manager = new PersonaManager(config.configPath);
+  // Initialize persona manager (with optional persistence for runtime stakeholders)
+  const runtimeStorePath =
+    config.runtimeStakeholdersPath ??
+    resolve(dirname(config.dbPath ?? DB_PATH), "runtime-stakeholders.json");
+  const manager = new PersonaManager(config.configPath, runtimeStorePath);
 
   // Initialize LLM client
   const llmClient = new LLMClient();

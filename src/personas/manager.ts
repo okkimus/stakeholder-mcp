@@ -1,4 +1,6 @@
 import { randomUUID } from "crypto";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { loadStakeholders } from "./loader";
 import {
   type Stakeholder,
@@ -9,17 +11,25 @@ import {
   DEFAULT_PROMPT_TEMPLATE,
   CreateStakeholderSchema,
   UpdateStakeholderSchema,
+  StakeholderSchema,
 } from "./types";
+import { logger } from "../utils/logger";
 
 /**
- * Manages stakeholder personas from both config and runtime sources
+ * Manages stakeholder personas from both config and runtime sources.
+ * Runtime stakeholders can be persisted to a JSON file so they survive server restarts.
  */
 export class PersonaManager {
   private configStakeholders: Map<string, Stakeholder> = new Map();
   private runtimeStakeholders: Map<string, Stakeholder> = new Map();
+  private readonly runtimeStorePath: string | undefined;
 
-  constructor(configPath?: string) {
+  constructor(configPath?: string, runtimeStorePath?: string) {
+    this.runtimeStorePath = runtimeStorePath;
     this.loadFromConfig(configPath);
+    if (this.runtimeStorePath) {
+      this.loadRuntimeStore();
+    }
   }
 
   /**
@@ -31,6 +41,56 @@ export class PersonaManager {
     for (const config of configs) {
       const stakeholder = this.configToStakeholder(config, "config");
       this.configStakeholders.set(stakeholder.id, stakeholder);
+    }
+  }
+
+  /**
+   * Load runtime stakeholders from JSON file (if path is set and file exists)
+   */
+  private loadRuntimeStore(): void {
+    if (!this.runtimeStorePath || !existsSync(this.runtimeStorePath)) {
+      return;
+    }
+    try {
+      const raw = readFileSync(this.runtimeStorePath, "utf-8");
+      const data = JSON.parse(raw) as unknown;
+      const list = Array.isArray(data) ? data : (data as { stakeholders?: unknown[] }).stakeholders ?? [];
+      for (const item of list) {
+        const parsed = StakeholderSchema.safeParse(item);
+        if (parsed.success && parsed.data.source === "runtime") {
+          this.runtimeStakeholders.set(parsed.data.id, parsed.data);
+        }
+      }
+      logger.info("Loaded runtime stakeholders from store", {
+        path: this.runtimeStorePath,
+        count: this.runtimeStakeholders.size,
+      });
+    } catch (error) {
+      logger.warn("Failed to load runtime stakeholders store", {
+        path: this.runtimeStorePath,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
+   * Persist runtime stakeholders to JSON file
+   */
+  private saveRuntimeStore(): void {
+    if (!this.runtimeStorePath) return;
+    try {
+      const dir = dirname(this.runtimeStorePath);
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
+      const list = Array.from(this.runtimeStakeholders.values());
+      writeFileSync(this.runtimeStorePath, JSON.stringify({ stakeholders: list }, null, 2), "utf-8");
+      logger.debug("Saved runtime stakeholders to store", { path: this.runtimeStorePath, count: list.length });
+    } catch (error) {
+      logger.warn("Failed to save runtime stakeholders store", {
+        path: this.runtimeStorePath,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -128,7 +188,7 @@ export class PersonaManager {
 
     const stakeholder = this.configToStakeholder(config, "runtime");
     this.runtimeStakeholders.set(id, stakeholder);
-
+    this.saveRuntimeStore();
     return stakeholder;
   }
 
@@ -159,6 +219,7 @@ export class PersonaManager {
     };
 
     this.runtimeStakeholders.set(id, updated);
+    this.saveRuntimeStore();
     return updated;
   }
 
@@ -176,6 +237,7 @@ export class PersonaManager {
     }
 
     this.runtimeStakeholders.delete(id);
+    this.saveRuntimeStore();
     return true;
   }
 
