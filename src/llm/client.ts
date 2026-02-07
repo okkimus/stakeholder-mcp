@@ -3,8 +3,19 @@ import type { GenerateParams, LLMResponse, LLMClientConfig } from "./types";
 
 const DEFAULT_MODEL = "anthropic/claude-3-haiku";
 const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
-const DEFAULT_MAX_TOKENS = 1024;
+/** High default so models can reason about requirements and implementation; override via STAKEHOLDER_MCP_MAX_TOKENS or config.defaultMaxTokens */
+const DEFAULT_MAX_TOKENS = 8192;
 const DEFAULT_TEMPERATURE = 0.7;
+
+function getDefaultMaxTokens(configValue?: number): number {
+  const envValue = process.env.STAKEHOLDER_MCP_MAX_TOKENS;
+  if (configValue != null) return configValue;
+  if (envValue !== undefined && envValue !== "") {
+    const n = parseInt(envValue, 10);
+    if (!Number.isNaN(n) && n >= 1) return Math.min(n, 128_000);
+  }
+  return DEFAULT_MAX_TOKENS;
+}
 
 /**
  * OpenRouter LLM client using OpenAI SDK
@@ -12,6 +23,7 @@ const DEFAULT_TEMPERATURE = 0.7;
 export class LLMClient {
   private client: OpenAI;
   private defaultModel: string;
+  private defaultMaxTokens: number;
 
   constructor(config: LLMClientConfig = {}) {
     const apiKey = config.apiKey ?? process.env.OPENROUTER_API_KEY;
@@ -24,6 +36,7 @@ export class LLMClient {
 
     this.defaultModel =
       config.defaultModel ?? process.env.DEFAULT_MODEL ?? DEFAULT_MODEL;
+    this.defaultMaxTokens = getDefaultMaxTokens(config.defaultMaxTokens);
 
     const defaultHeaders: Record<string, string> = {
       "X-Title": config.appTitle ?? "Stakeholder MCP Server",
@@ -55,7 +68,7 @@ export class LLMClient {
           { role: "user", content: params.userPrompt },
         ],
         temperature: params.temperature ?? DEFAULT_TEMPERATURE,
-        max_tokens: params.maxTokens ?? DEFAULT_MAX_TOKENS,
+        max_tokens: params.maxTokens ?? this.defaultMaxTokens,
       });
 
       const content = completion.choices[0]?.message?.content ?? "";

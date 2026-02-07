@@ -2,6 +2,8 @@
 
 An MCP (Model Context Protocol) server that exposes stakeholder personas as tools for iterative product feedback. Each stakeholder represents a distinct role with a unique personality, expertise, and concerns.
 
+> **Cost-sensitive?** The server uses a high default token limit so models can reason about requirements and implementation. To control cost, set **`STAKEHOLDER_MCP_MAX_TOKENS`** (see [Configuration](#configuration)).
+
 > **Disclaimer** — This project was fully AI-generated with Cursor. There is no warranty or liability; use it at your own responsibility.
 
 ## Features
@@ -171,9 +173,20 @@ If your agent asks a question and then a follow-up, the stakeholder does not see
 |----------|-------------|---------|
 | `OPENROUTER_API_KEY` | Your OpenRouter API key | (required for LLM calls) |
 | `DEFAULT_MODEL` | Default LLM model | `anthropic/claude-3-haiku` |
+| `STAKEHOLDER_MCP_MAX_TOKENS` | Max tokens per consultation response; lower to reduce cost | `8192` |
 | `DB_PATH` | SQLite path for consultation logs | `data/consultations.db` |
 | `STAKEHOLDER_MCP_API_KEY` | API key for HTTP auth | (optional) |
 | `LOG_LEVEL` | Logging level | `info` |
+
+### Controlling token usage (max tokens)
+
+Consultations call the LLM with a **default maximum of 8192 tokens** per response so stakeholders can give detailed, thoughtful feedback. You can override this in two ways:
+
+1. **Environment variable** — Set `STAKEHOLDER_MCP_MAX_TOKENS` to the desired cap (e.g. `2048` or `1024`). The value is clamped to 128,000. Example in `.env`:
+   ```bash
+   STAKEHOLDER_MCP_MAX_TOKENS=2048
+   ```
+2. **Per-request** — The `consult_stakeholder` and `consult_group` tools accept an optional `maxTokens` argument; when provided, it overrides the default for that call only.
 
 Runtime stakeholders (created via `create_stakeholder` or overrides from `update_stakeholder`) are persisted to a JSON file so they survive server restarts. By default the file is `data/runtime-stakeholders.json` (same directory as `DB_PATH`). You can override the path when creating the server via `runtimeStakeholdersPath` in `ServerConfig`.
 

@@ -30,6 +30,8 @@ export interface LLMClientConfig {
   apiKey?: string;
   baseURL?: string;
   defaultModel?: string;
+  /** Default max tokens per completion when not overridden by request (default: 8192, or STAKEHOLDER_MCP_MAX_TOKENS env) */
+  defaultMaxTokens?: number;
   appUrl?: string;
   appTitle?: string;
 }
