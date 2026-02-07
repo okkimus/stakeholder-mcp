@@ -251,6 +251,28 @@ Add the server to your MCP config. User-level: **Cursor Settings → MCP → Edi
 
 Replace `/path/to/stakeholder-mcp` with the actual path to this project.
 
+### Codex CLI
+
+Codex CLI (and the Codex VSCode extension) use a **shared TOML config** at `~/.codex/config.toml`. MCP servers run as local subprocesses over STDIO.
+
+1. **Create the config directory** (if it doesn’t exist):
+   ```bash
+   mkdir -p ~/.codex
+   ```
+
+2. **Add the stakeholder MCP** to `~/.codex/config.toml`:
+   ```toml
+   [mcp_servers.stakeholder_mcp]
+   command = "bun"
+   args = ["run", "/path/to/stakeholder-mcp/src/index.ts"]
+   env = { "OPENROUTER_API_KEY" = "your-key-here" }
+   ```
+   Replace `/path/to/stakeholder-mcp` with the actual path to this repo (e.g. `/Users/you/repos/stakeholder-mcp`). Use an absolute path so it works from any working directory.
+
+3. **Restart Codex** (CLI session or VSCode extension) so it reloads the config.
+
+Then in Codex you can ask things like: *"List the stakeholders and consult the tech lead on using microservices for a simple blog."*
+
 ## Development
 
 ```bash
