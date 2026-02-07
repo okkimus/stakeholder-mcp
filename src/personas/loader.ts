@@ -9,6 +9,7 @@ import {
 import { logger } from "../utils/logger";
 
 const DEFAULT_CONFIG_PATHS = [
+  "./.cursor/stakeholders.yaml",
   "./config/stakeholders.yaml",
   "./stakeholders.yaml",
   "../config/stakeholders.yaml",

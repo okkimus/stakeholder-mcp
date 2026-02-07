@@ -175,6 +175,9 @@ If your agent asks a question and then a follow-up, the stakeholder does not see
 | `DEFAULT_MODEL` | Default LLM model | `anthropic/claude-3-haiku` |
 | `STAKEHOLDER_MCP_MAX_TOKENS` | Max tokens per consultation response; lower to reduce cost | `8192` |
 | `DB_PATH` | SQLite path for consultation logs | `data/consultations.db` |
+| `STAKEHOLDER_MCP_CONFIG_PATH` | Path to stakeholders YAML (project-specific config) | (see [Project-specific config](#project-specific-configuration)) |
+| `STAKEHOLDER_MCP_DB_PATH` | Override DB path (e.g. per-project consultation logs) | same as `DB_PATH` default |
+| `STAKEHOLDER_MCP_RUNTIME_STORE_PATH` | Path for runtime stakeholders JSON (per-project) | derived from DB path |
 | `STAKEHOLDER_MCP_API_KEY` | API key for HTTP auth | (optional) |
 | `LOG_LEVEL` | Logging level | `info` |
 
@@ -210,6 +213,67 @@ stakeholders:
       - "priority 1"
       - "priority 2"
 ```
+
+### Project-specific configuration
+
+You can use **different stakeholder personas per project** by pointing the MCP at a project-local config file. That way each repo gets its own set of stakeholders (e.g. domain experts, product roles) when you use the MCP from Cursor or another tool.
+
+**Option 1: Convention (no env vars)**  
+If the MCP server is started with the project as the current working directory (typical when using Cursor’s project-level MCP), it will look for a config file in this order:
+
+1. `./.cursor/stakeholders.yaml` (project root)
+2. `./config/stakeholders.yaml`
+3. `./stakeholders.yaml`
+
+So you can add **`.cursor/stakeholders.yaml`** in your project with project-specific personas; that file will be used automatically when the MCP runs in that project.
+
+**Option 2: Explicit path via env**  
+Set **`STAKEHOLDER_MCP_CONFIG_PATH`** in the MCP’s `env` to the path of your project’s config file. Relative paths are resolved from the process working directory (usually the project root when using Cursor’s project-level MCP).
+
+**Example: project-level Cursor MCP**
+
+1. In your project, create `.cursor/stakeholders.yaml` with the personas for that project (or put `stakeholders.yaml` in the project root).
+
+2. In the same project, create **`.cursor/mcp.json`** so this project uses the stakeholder MCP with that config:
+
+```json
+{
+  "mcpServers": {
+    "stakeholder-mcp": {
+      "command": "bun",
+      "args": ["run", "/path/to/stakeholder-mcp/src/index.ts"],
+      "env": {
+        "OPENROUTER_API_KEY": "your-key-here",
+        "STAKEHOLDER_MCP_CONFIG_PATH": ".cursor/stakeholders.yaml",
+        "STAKEHOLDER_MCP_DB_PATH": ".cursor/data/consultations.db",
+        "STAKEHOLDER_MCP_RUNTIME_STORE_PATH": ".cursor/data/runtime-stakeholders.json"
+      }
+    }
+  }
+}
+```
+
+Replace `/path/to/stakeholder-mcp` with the real path to the stakeholder-mcp repo. If you use the convention above, you can omit `STAKEHOLDER_MCP_CONFIG_PATH` and only set the paths if you want consultation logs and runtime stakeholders stored under `.cursor/data/` for this project.
+
+**Generating a project config**  
+Copy the format from `config/stakeholders.yaml` in this repo, or start from a minimal file:
+
+```yaml
+stakeholders:
+  - id: "domain-expert"
+    name: "Jamie"
+    role: "Domain Expert"
+    personality:
+      traits: ["pragmatic", "user-focused"]
+      communication_style: "clear and concise"
+    expertise:
+      - "your domain"
+    concerns:
+      - "accuracy"
+      - "usability"
+```
+
+Then add or edit entries to match the roles and expertise that matter for the project.
 
 ## Setting up with MCP-compatible tools
 
