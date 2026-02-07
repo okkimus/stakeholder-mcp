@@ -55,6 +55,10 @@ The server uses stdio transport, which is the standard for MCP clients like Clau
 
 When using the MCP with Claude, Cursor, or another AI assistant, you can prompt the model to use the stakeholder tools. The model will then call the MCP (e.g. `list_stakeholders`, `consult_stakeholder`, `consult_group`) on your behalf.
 
+**Full example: language learning app**
+
+The [examples/full-example-language-app/](examples/full-example-language-app/) directory contains a full run of the MCP in action: an AI agent (in Cursor) acts as a product manager, consults multiple stakeholders (end users, tech lead, UX designer) to refine gamified vocabulary features for a language app, records the conversations, and produces PDRs (Prompt Requirements Documents). Useful to see the end-to-end workflow and the kind of outputs you can get from a single prompt.
+
 **Planning a new feature**
 
 - *"I'm planning to add a dark mode toggle to our app. Consult the relevant stakeholders (UX, product, maybe tech) and summarize their feedback before we lock the design."*
